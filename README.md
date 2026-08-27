@@ -1,0 +1,2 @@
+# dopilnik
+fix some soft
