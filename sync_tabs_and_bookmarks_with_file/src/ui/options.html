@@ -1,0 +1,47 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>dopilnik sync — settings</title>
+<link rel="stylesheet" href="ui.css">
+<body class="options">
+  <h1>dopilnik sync</h1>
+  <p class="muted">Bookmarks are written whenever they change; tabs on a timer. Files land in your Downloads folder.</p>
+
+  <h2>Settings</h2>
+  <label>
+    Bucket
+    <span class="hint">Set this per browser profile, e.g. <code>work</code> or <code>home</code>. It names the files.</span>
+    <input type="text" id="bucket">
+  </label>
+
+  <label>
+    Subfolder inside Downloads
+    <span class="hint">Relative to your Downloads folder. Nested paths are fine.</span>
+    <input type="text" id="subfolder">
+    <span class="field-error" id="subfolder-error"></span>
+  </label>
+
+  <label>
+    Tab snapshot interval (minutes)
+    <input type="number" id="interval" min="1" max="1440">
+  </label>
+
+  <label><input type="checkbox" id="sync-bookmarks"> Sync bookmarks on change</label>
+  <label><input type="checkbox" id="sync-tabs"> Sync tabs on a timer</label>
+
+  <p><button class="primary" id="save">Save</button> <span id="saved" class="ok"></span></p>
+  <p class="muted" id="paths"></p>
+
+  <h2>Restore bookmarks</h2>
+  <p class="muted">Pick a <code>*-bookmarks.html</code> file. Merge adds what is missing and never deletes; replace wipes the matching roots first.</p>
+  <label><input type="radio" name="bm-mode" value="merge" checked> Merge, skipping duplicates</label>
+  <label><input type="radio" name="bm-mode" value="replace"> Replace everything</label>
+  <p><input type="file" id="bm-file" accept=".html,text/html"> <button id="bm-restore">Restore bookmarks</button></p>
+  <p class="result" id="bm-result"></p>
+
+  <h2>Restore tabs</h2>
+  <p class="muted">Pick a <code>*-tabs.json</code> file. Every saved window is reopened with all of its tabs loaded.</p>
+  <p><input type="file" id="tabs-file" accept=".json,application/json"> <button id="tabs-restore">Restore tabs</button></p>
+  <p class="result" id="tabs-result"></p>
+
+  <script type="module" src="options.js"></script>
+</body>

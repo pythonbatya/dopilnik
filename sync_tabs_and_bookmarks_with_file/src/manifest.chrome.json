@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "dopilnik sync",
+  "version": "0.1.0",
+  "description": "Automatically exports bookmarks and open tabs to files in the Downloads folder.",
+  "permissions": ["bookmarks", "tabs", "downloads", "storage", "alarms"],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "ui/popup.html",
+    "default_title": "dopilnik sync"
+  },
+  "options_ui": {
+    "page": "ui/options.html",
+    "open_in_tab": true
+  }
+}
