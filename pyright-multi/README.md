@@ -17,6 +17,9 @@ One pyright language server per module, each with its own venv. Built for openin
 - Files outside any module get no python intelligence.
 - Editing the manifest applies live (watcher + re-read on file open / window focus);
   a broken manifest keeps the last valid module list.
+- Servers live until the window closes or reloads (deactivate → shutdown/exit);
+  closing tabs does not stop them. If VSCode is hard-killed, servers die on stdin
+  EOF; any leftover is swept at the next activation.
 
 ## Install / develop
 
@@ -37,6 +40,18 @@ servers on the same python files produce duplicate/wrong intelligence.
 - Processes: `ps -axo pid=,ppid=,command= | grep langserver.index.js`
   — ours carry the path into this extension's node_modules. Orphaned ones
   (ppid = 1) are swept at the next extension activation.
+
+## Roadmap (not implemented yet)
+
+The next natural step: **running**, not just reading. The router already knows
+file → module → venv, so the extension can offer:
+
+- command "Run this file with its module venv" (terminal, cwd = module root) —
+  the stock play button uses the single workspace-folder interpreter and picks
+  the wrong venv for everything;
+- CodeLens ▶ above `if __name__ == '__main__'` and above each pytest test
+  (`venv/bin/python -m pytest file::test`);
+- later: a run-configurations panel / Test Explorer integration.
 
 ## Manual test checklist (run before any "done")
 
