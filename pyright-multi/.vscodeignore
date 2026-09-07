@@ -1,0 +1,9 @@
+.vscode/**
+src/**
+node_modules/@types/**
+node_modules/.bin/**
+node_modules/typescript/**
+node_modules/esbuild/**
+node_modules/tsx/**
+**/*.map
+**/*.ts
