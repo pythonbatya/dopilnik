@@ -1,0 +1,43 @@
+{
+  "name": "py-hierarchy",
+  "displayName": "py-hierarchy",
+  "description": "Gutter marker + hover links to jump to parent classes and overriding children (pyright)",
+  "version": "0.13.4",
+  "publisher": "lvinogradov",
+  "engines": { "vscode": "^1.93.0" },
+  "categories": ["Programming Languages"],
+  "activationEvents": ["onLanguage:python"],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "languages": [
+      { "id": "pyhierarchy-result" }
+    ],
+    "grammars": [
+      {
+        "language": "pyhierarchy-result",
+        "scopeName": "source.pyhierarchy-result",
+        "path": "./syntaxes/pyhierarchy-result.tmLanguage.json"
+      }
+    ],
+    "commands": [
+      { "command": "pyHierarchy.nav", "title": "py-hierarchy: navigate (internal, use CodeLens)" },
+      { "command": "pyHierarchy.openAtCursor", "title": "py-hierarchy: open the target of the line under the cursor" }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "node esbuild.js --production",
+    "compile": "node esbuild.js",
+    "watch": "node esbuild.js --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test src/symbols.test.ts src/hoverLinks.test.ts src/walker.test.ts ../shared-result/src/resultRender.test.ts ../shared-result/src/resultLinks.test.ts",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/vscode": "^1.93.0",
+    "@vscode/vsce": "^3.2.0",
+    "esbuild": "^0.24.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}

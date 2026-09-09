@@ -1,0 +1,27 @@
+{
+  "name": "status-path",
+  "displayName": "status-path",
+  "description": "Active file path as breadcrumbs in the left side of the status bar",
+  "version": "0.1.1",
+  "publisher": "lvinogradov",
+  "engines": { "vscode": "^1.93.0" },
+  "categories": ["Other"],
+  "activationEvents": ["onStartupFinished"],
+  "main": "./dist/extension.js",
+  "scripts": {
+    "vscode:prepublish": "node esbuild.js --production",
+    "compile": "node esbuild.js",
+    "watch": "node esbuild.js --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test src/breadcrumb.test.ts",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/vscode": "^1.93.0",
+    "@vscode/vsce": "^3.2.0",
+    "esbuild": "^0.24.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}

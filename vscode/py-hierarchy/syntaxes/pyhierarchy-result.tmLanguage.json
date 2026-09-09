@@ -1,0 +1,143 @@
+{
+    "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+    "name": "py-hierarchy result",
+    "scopeName": "source.pyhierarchy-result",
+    "patterns": [
+        { "include": "#section" },
+        { "include": "#footer" },
+        { "include": "#header-with-symbol" },
+        { "include": "#header-plain" },
+        { "include": "#lineno" },
+        { "include": "#code" }
+    ],
+    "repository": {
+        "section": {
+            "comment": "⇧ bases / ⇩ subclasses labels",
+            "match": "^(\\s*)([⇧⇩⇅][^\\n]*)$",
+            "captures": {
+                "2": { "name": "entity.name.section.pyhierarchy" }
+            }
+        },
+        "footer": {
+            "match": "^(\\s*)(⋯[^\\n]*)$",
+            "captures": {
+                "2": { "name": "comment.pyhierarchy" }
+            }
+        },
+        "header-with-symbol": {
+            "comment": "Symbol — rel/path.py: — search colors its path lines via the plain `string` scope (meta.resultBlock.search string meta.path.search in the bundled grammar), which every theme defines; find-in-files is themed by almost nobody",
+            "match": "^(\\s*)(?![\\d⇧⇩⇅])(\\S[^:\\n]*?)(\\s+—\\s+)(\\S[^\\n]*?)(:)\\s*$",
+            "captures": {
+                "2": { "name": "string meta.symbol.pyhierarchy" },
+                "3": { "name": "punctuation.separator.pyhierarchy" },
+                "4": { "name": "string meta.path.search" },
+                "5": { "name": "punctuation.separator.pyhierarchy" }
+            }
+        },
+        "header-plain": {
+            "comment": "path-only header (same file as the previous block)",
+            "match": "^(\\s*)(?![\\d⇧⇩⇅])(\\S[^:\\n]*?)(:)\\s*$",
+            "captures": {
+                "2": { "name": "string meta.path.search" },
+                "3": { "name": "punctuation.separator.pyhierarchy" }
+            }
+        },
+        "lineno": {
+            "comment": "match (NN:) and context (NN) line-number prefixes; the search grammar's own prefix scope (context prefixes get dimmed by decoration anyway)",
+            "match": "^(\\s*)(\\d+)(:)?",
+            "captures": {
+                "2": { "name": "constant.numeric.integer meta.resultLinePrefix.search meta.resultLinePrefix.matchLinePrefix.search" },
+                "3": { "name": "punctuation.separator.pyhierarchy" }
+            }
+        },
+        "code": {
+            "comment": "python-ish coloring, line-local only: no begin/end regions anywhere, so an excerpt cut mid-docstring cannot leak state into other lines",
+            "patterns": [
+                { "include": "#block-string" },
+                { "include": "#string-single" },
+                { "include": "#string-double" },
+                { "include": "#comment" },
+                { "include": "#decorator" },
+                { "include": "#async-def" },
+                { "include": "#def" },
+                { "include": "#class" },
+                { "include": "#keyword" },
+                { "include": "#constant" },
+                { "include": "#self" },
+                { "include": "#builtin" },
+                { "include": "#number" },
+                { "include": "#call" }
+            ]
+        },
+        "block-string": {
+            "comment": "triple quotes; the unterminated variant stops at end of line — the leak killer",
+            "match": "\"{3}[^\"\\n]*\"{3}|'{3}[^'\\n]*'{3}|\"{3}[^\\n]*|'{3}[^\\n]*",
+            "name": "string.quoted.double.block.python"
+        },
+        "string-single": {
+            "match": "[fFrRbBuU]{0,2}'[^'\\n]*'",
+            "name": "string.quoted.single.python"
+        },
+        "string-double": {
+            "match": "[fFrRbBuU]{0,2}\"[^\"\\n]*\"",
+            "name": "string.quoted.double.python"
+        },
+        "comment": {
+            "match": "#[^\\n]*",
+            "name": "comment.line.number-sign.python"
+        },
+        "decorator": {
+            "match": "@[A-Za-z_][\\w.]*",
+            "name": "entity.name.function.decorator.python"
+        },
+        "async-def": {
+            "match": "\\b(async\\s+def)\\s+([A-Za-z_]\\w*)",
+            "captures": {
+                "1": { "name": "keyword.control.python" },
+                "2": { "name": "entity.name.function.python" }
+            }
+        },
+        "def": {
+            "match": "\\b(def)\\s+([A-Za-z_]\\w*)",
+            "captures": {
+                "1": { "name": "keyword.control.python" },
+                "2": { "name": "entity.name.function.python" }
+            }
+        },
+        "class": {
+            "match": "\\b(class)\\s+([A-Za-z_]\\w*)",
+            "captures": {
+                "1": { "name": "keyword.control.python" },
+                "2": { "name": "entity.name.type.class.python" }
+            }
+        },
+        "keyword": {
+            "match": "\\b(async|await|return|if|elif|else|for|while|try|except|finally|with|import|from|as|pass|raise|yield|not|and|or|in|is|lambda|assert|del|global|nonlocal|break|continue|match|case)\\b",
+            "name": "keyword.control.python"
+        },
+        "constant": {
+            "match": "\\b(True|False|None)\\b",
+            "name": "constant.language.python"
+        },
+        "self": {
+            "match": "\\b(self|cls)\\b",
+            "name": "variable.language.python"
+        },
+        "builtin": {
+            "comment": "pyright classifies builtins as functions (semantic tokens), so the function scope is what the real editor shows",
+            "match": "\\b(super|isinstance|issubclass|print|len|range|enumerate|zip|abs|all|any|dict|list|set|tuple|str|int|float|bool|bytes|type|getattr|setattr|hasattr|sorted|min|max|sum|map|filter|repr|open|staticmethod|classmethod|property)\\b",
+            "name": "entity.name.function.python"
+        },
+        "number": {
+            "match": "\\b\\d[\\d_]*(\\.[\\d_]+)?\\b",
+            "name": "constant.numeric.python"
+        },
+        "call": {
+            "comment": "call sites only: def/class names are already consumed by their own rules",
+            "match": "(?<![\\w.])([A-Za-z_]\\w*)(?=\\s*\\()",
+            "captures": {
+                "1": { "name": "entity.name.function.python" }
+            }
+        }
+    }
+}

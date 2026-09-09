@@ -1,0 +1,48 @@
+{
+  "name": "py-usages",
+  "displayName": "py-usages",
+  "description": "Collect usages of the symbol at cursor into a result editor",
+  "version": "0.4.2",
+  "publisher": "lvinogradov",
+  "engines": { "vscode": "^1.93.0" },
+  "categories": ["Programming Languages"],
+  "activationEvents": ["onCommand:pyUsages.collect", "onCommand:pyUsages.cmdB"],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "languages": [
+      { "id": "pyusages-result" }
+    ],
+    "grammars": [
+      {
+        "language": "pyusages-result",
+        "scopeName": "source.pyusages-result",
+        "path": "./syntaxes/pyusages-result.tmLanguage.json"
+      }
+    ],
+    "commands": [
+      { "command": "pyUsages.collect", "title": "py-usages: collect usages of symbol at cursor" },
+      { "command": "pyUsages.cmdB", "title": "py-usages: cmd+b — definition, or usages when on the definition (IDEA-style)" }
+    ],
+    "menus": {
+      "editor/context": [
+        { "command": "pyUsages.collect", "when": "editorTextFocus", "group": "navigation@1.5" }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "node esbuild.js --production",
+    "compile": "node esbuild.js",
+    "watch": "node esbuild.js --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test src/usageClassify.test.ts src/usageGroups.test.ts src/pyParse.test.ts ../shared-result/src/resultRender.test.ts ../shared-result/src/resultLinks.test.ts",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/vscode": "^1.93.0",
+    "@vscode/vsce": "^3.2.0",
+    "esbuild": "^0.24.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}
