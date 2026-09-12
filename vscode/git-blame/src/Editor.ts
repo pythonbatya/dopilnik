@@ -1,0 +1,110 @@
+/**
+ * License GPL-2.0
+ */
+import * as vscode from 'vscode';
+import { blameFile } from './Git';
+import { getFilename } from './Utils';
+import BlameManager from './BlameManager';
+import Settings from './Settings';
+
+class EditorManager {
+
+    private static instance: EditorManager;
+
+    // Keyed by document.uri.toString(), not fileName: the two panes of a
+    // commit diff share the same fsPath and differ only in the query (rev).
+    private openEditors: Map<string, BlameManager> = new Map();
+    private current: BlameManager | null = null;
+    private shouldReBlame: boolean = false;
+
+    private constructor() {}
+
+    get currentEditor() {
+        return this.current!;
+    }
+
+    async toggleEditor(editor: vscode.TextEditor) {
+        const key = editor.document.uri.toString();
+        if (this.openEditors.get(key)) {
+            await this.openEditors.get(key)?.toggleBlame(editor);
+        } else {
+            const manager = new BlameManager();
+            manager.toggleBlame(editor);
+            this.openEditors.set(key, manager);
+            this.current = manager;
+        }
+    }
+
+    async reBlame() {
+        const openEditor = vscode.window.activeTextEditor;
+        this.shouldReBlame = true;
+        if (openEditor) {
+            const editor = this.getEditor(openEditor.document);
+            if (editor) {
+                editor.reBlame(openEditor);
+                this.shouldReBlame = false;
+            }
+        }
+    }
+    
+    changeEditor(editor?: vscode.TextEditor) {
+        if (!editor?.document.fileName) {
+            return;
+        }
+
+        if (editor && !Settings.isKeepBlamesOpen()) {
+            this.closeEditor(editor.document);
+        }
+    
+        let nextEditor;
+        if ((nextEditor = editor && this.getEditor(editor.document)) !== undefined) {
+            this.shouldReBlame ? nextEditor.reBlame(editor) : nextEditor.restore();
+            this.shouldReBlame = false;
+            this.current = nextEditor;
+        }
+    }
+    
+    closeEditor(document: vscode.TextDocument) {
+        this.getEditor(document)?.closeBlame();
+    }
+    
+    disposeEditors() {
+        const iterator = this.openEditors.entries();
+        let next;
+        while ((next = iterator.next().value) !== undefined) {
+            next[1].closeBlame();
+        }
+    }
+    
+    getEditor(document: vscode.TextDocument): BlameManager | undefined {
+        return this.openEditors.get(document.uri.toString());
+    }
+
+    static getInstance() {
+        if (!this.instance) {
+            this.instance = new this();
+        }
+        return this.instance;
+    }
+}
+
+export default EditorManager;
+
+export const openBlameEditor = async (editor: vscode.TextEditor) => {
+    const blamedContent = await blameFile(editor.document.fileName);
+
+    const panel = vscode.window.createWebviewPanel('blame', `Blame - ${getFilename(editor.document.uri.path)}`, vscode.ViewColumn.Beside);
+
+    panel.webview.html = getHtmlForEditor(blamedContent);
+};
+
+function getHtmlForEditor(content: string) {
+    return `<!DOCTYPE html>
+<html>
+<body>
+    <div style="white-space: pre">
+${content}
+    </div>
+<body>
+</html>`;
+};

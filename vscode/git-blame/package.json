@@ -1,0 +1,299 @@
+{
+  "name": "simply-blame",
+  "displayName": "Simply Blame",
+  "description": "Idea like git blame annotations",
+  "publisher": "lvinogradov",
+  "version": "1.12.3",
+  "repository": {
+    "type": "github",
+    "url": "https://github.com/JamiLu/simply-blame"
+  },
+  "bugs": {
+    "url": "https://github.com/JamiLu/simply-blame/issues"
+  },
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./out/extension.js",
+  "icon": "icon.png",
+  "keywords": [
+    "vscode",
+    "extension",
+    "openvsx",
+    "git",
+    "blame",
+    "annotations"
+  ],
+  "homepage": "https://simplyblame.com",
+  "contributes": {
+    "configuration": {
+      "title": "SimplyBlame",
+      "properties": {
+        "simplyblame.dateFormat": {
+          "type": "string",
+          "enum": [
+            "system",
+            "DD/MM/YYYY",
+            "D/M/YYYY",
+            "MM/DD/YYYY",
+            "M/D/YYYY",
+            "YYYY/MM/DD",
+            "DD.MM.YYYY",
+            "D.M.YYYY",
+            "MM.DD.YYYY",
+            "M.D.YYYY",
+            "YYYY.MM.DD",
+            "DD-MM-YYYY",
+            "D-M-YYYY",
+            "MM-DD-YYYY",
+            "M-D-YYYY",
+            "YYYY-MM-DD"
+          ],
+          "default": "system",
+          "description": "Select a date format for the blame annotations.",
+          "order": 0
+        },
+        "simplyblame.authorStyle": {
+          "type": "string",
+          "enum": [
+            "full",
+            "first",
+            "last"
+          ],
+          "enumItemLabels": [
+            "Full name",
+            "First name",
+            "Last name"
+          ],
+          "default": "full",
+          "description": "Select an author style for the blame annotations.",
+          "order": 1
+        },
+        "simplyblame.hoverStyle": {
+          "type": "string",
+          "enum": [
+            "normal",
+            "minimal"
+          ],
+          "enumItemLabels": [
+            "Normal",
+            "Minimal"
+          ],
+          "enumDescriptions": [
+            "Show full details of the commit",
+            "Show a hash and a summary of the commit"
+          ],
+          "default": "normal",
+          "description": "Select a hover message style for the blame annotations.",
+          "order": 1
+        },
+        "simplyblame.keepBlamesOpen": {
+          "type": "boolean",
+          "default": false,
+          "description": "Keep blame annotations open as long as a tab or window is open. If not selected annotations are closed on tab change.",
+          "order": 2
+        },
+        "simplyblame.ignoreWhitespace": {
+          "type": "boolean",
+          "default": false,
+          "description": "If selected blame will ignore whitepace changes. When unselected blame annotations are shown as normal.",
+          "order": 2
+        },
+        "simplyblame.hashAction": {
+          "type": "string",
+          "enum": [
+            "copy",
+            "remote",
+            "local"
+          ],
+          "enumItemLabels": [
+            "Copy",
+            "Open in remote",
+            "Open in VS Code"
+          ],
+          "enumDescriptions": [
+            "Copy a hash into the clipboard",
+            "Open a commit in the browser",
+            "Open a commit in the VS Code's new tab"
+          ],
+          "default": "copy",
+          "description": "Select a click hash action",
+          "order": 2
+        },
+        "simplyblame.heatColorIndexStrategy": {
+          "type": "string",
+          "default": "scale",
+          "description": "Choose how the heat colors are shown. Scale through the commits or highlight the latest commits.",
+          "enum": [
+            "scale",
+            "highlight"
+          ],
+          "enumItemLabels": [
+            "Scale",
+            "Highlight"
+          ],
+          "enumDescriptions": [
+            "Scales through all the commits",
+            "Highlights 10 last commits"
+          ],
+          "order": 2
+        },
+        "simplyblame.useRGBColor": {
+          "type": "boolean",
+          "default": true,
+          "description": "If selected the RGBColors Dark/Light Lists will be used, otherwise the hex color lists are used.",
+          "order": 3
+        },
+        "simplyblame.heatMapRGBColorsDarkList": {
+          "type": "object",
+          "markdownDescription": "Add, edit, choose a color to be used as a heat color. \n* **Add** a new color or **Edit** an old color \n * The **color** must follow **format** **r**0-255,**g**0-255,**b**0-255,**c**0-9. The **r,g,b** stands for **red,green,blue**, the **c** stands for **change percentage** and it can **be less than 10**.\n* **Choose** a color by **setting** the value **true** in the table below. The first matcing true is used if nothing matches the first color will be used.",
+          "default": {
+            "Lava: r155,g0,b0,c3": true,
+            "Matcha: r0,g155,b50,c3": false,
+            "Night: r55,g55,b170,c3": false,
+            "Teal: r0,g105,b160,c4": false,
+            "Gold: r205,g155,b0,c4": false
+          },
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "boolean"
+          },
+          "order": 4
+        },
+        "simplyblame.heatMapRGBColorsLightList": {
+          "type": "object",
+          "markdownDescription": "Add, edit, choose a color to be used as a heat color. \n* **Add** a new color or **Edit** an old color \n * The **color** must follow **format** **r**0-255,**g**0-255,**b**0-255,**c**0-9. The **r,g,b** stands for **red,green,blue**, the **c** stands for **change percentage** and it can **be less than 10**.\n* **Choose** a color by **setting** the value **true** in the table below. The first matcing true is used if nothing matches the first color will be used.",
+          "default": {
+            "Candy: r255,g204,b204,c3": true,
+            "Grass: r150,g255,b150,c4": false,
+            "Lemon: r255,g255,b150,c4": false,
+            "Sky: r204,g255,b255,c3": false,
+            "Ash: r230,g230,b230,c2": false
+          },
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "boolean"
+          },
+          "order": 4
+        },
+        "simplyblame.heatMapColorsDark": {
+          "type": "array",
+          "minItems": 6,
+          "items": {
+            "type": "string",
+            "pattern": "^#[a-fA-F0-9]{6}"
+          },
+          "default": [
+            "#990000",
+            "#910808",
+            "#8a0f0f",
+            "#821717",
+            "#7a1f1f",
+            "#732626",
+            "#6b2e2e",
+            "#633636",
+            "#5c3d3d",
+            "#544545",
+            "#382e2e"
+          ],
+          "description": "Default dark colors of the heat map.",
+          "order": 5
+        },
+        "simplyblame.heatMapColorsLight": {
+          "type": "array",
+          "minItems": 6,
+          "items": {
+            "type": "string",
+            "pattern": "^#[a-fA-F0-9]{6}"
+          },
+          "default": [
+            "#ffcccc",
+            "#fccfcf",
+            "#fad1d1",
+            "#f7d4d4",
+            "#f5d6d6",
+            "#f2d9d9",
+            "#f0dbdb",
+            "#eddede",
+            "#ebe0e0",
+            "#e8e3e3",
+            "#e6e6e6"
+          ],
+          "description": "Default light colors of the heat map.",
+          "order": 5
+        },
+        "simplyblame.enableOpenBlameEditor": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show a command to open raw blame file on the editor.",
+          "order": 10
+        }
+      }
+    },
+    "activationEvents": [
+      "*"
+    ],
+    "commands": [
+      {
+        "command": "simply-blame.openBlameInEditorDebugCommand",
+        "title": "Open raw blame file",
+        "enablement": "config.simplyblame.enableOpenBlameEditor"
+      },
+      {
+        "command": "simply-blame.simplyBlame",
+        "title": "Simply Blame"
+      },
+      {
+        "command": "simply-blame.toggleIgnoreWhitespace",
+        "title": "Simply Blame: Toggle Ignore Whitespace"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "simply-blame.openBlameInEditorDebugCommand",
+          "group": "Other",
+          "when": "config.simplyblame.enableOpenBlameEditor"
+        },
+        {
+          "command": "simply-blame.simplyBlame",
+          "group": "Other"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "package": "vsce package",
+    "copy-fixtures": "cp -r ./src/test/fixtures ./out/test/",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "pretest-copy-fixtures": "npm run pretest && npm run copy-fixtures",
+    "lint": "eslint src --ext ts",
+    "lint:fix": "npm run lint -- --fix",
+    "test": "node ./out/test/runTest.js",
+    "deploy": "vsce publish",
+    "deploy:ovsx": "ovsx publish"
+  },
+  "devDependencies": {
+    "@types/glob": "^8.0.0",
+    "@types/mocha": "^10.0.1",
+    "@types/node": "16.x",
+    "@types/vscode": "1.74.0",
+    "@typescript-eslint/eslint-plugin": "^5.45.0",
+    "@typescript-eslint/parser": "^5.45.0",
+    "@vscode/test-cli": "^0.0.8",
+    "@vscode/test-electron": "^2.3.9",
+    "@vscode/vsce": "^3.3.2",
+    "eslint": "^8.28.0",
+    "glob": "^8.0.3",
+    "mocha": "^10.1.0",
+    "ovsx": "^0.10.5",
+    "ts-sinon": "^2.0.2",
+    "typescript": "^4.9.3"
+  }
+}
