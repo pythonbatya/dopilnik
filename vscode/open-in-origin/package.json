@@ -1,0 +1,40 @@
+{
+  "name": "open-in-origin",
+  "displayName": "open-in-origin",
+  "description": "Open the current editor line on the origin remote's web UI (forgejo/github) as a permalink to HEAD's commit",
+  "version": "0.1.0",
+  "publisher": "lvinogradov",
+  "engines": { "vscode": "^1.93.0" },
+  "categories": ["Other"],
+  "activationEvents": [],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      { "command": "openInOrigin.openAtLine", "title": "Open Line in Origin", "icon": "$(link-external)" }
+    ],
+    "menus": {
+      "editor/title": [
+        { "command": "openInOrigin.openAtLine", "when": "resourceScheme == file", "group": "navigation@9" }
+      ],
+      "editor/context": [
+        { "command": "openInOrigin.openAtLine", "when": "resourceScheme == file", "group": "navigation@9" }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "node esbuild.js --production",
+    "compile": "node esbuild.js",
+    "watch": "node esbuild.js --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test src/remoteUrl.test.ts",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/vscode": "^1.93.0",
+    "@vscode/vsce": "^3.2.0",
+    "esbuild": "^0.24.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}
