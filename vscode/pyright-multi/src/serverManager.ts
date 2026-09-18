@@ -98,6 +98,18 @@ export class ServerManager {
         this.#emitChange();
     }
 
+    /**
+     * Full process restart. pyright resolves imports once per process and never
+     * learns about a new top-level package on its own — a fresh scan is the only
+     * way to pick one up short of reloading the window.
+     */
+    async restart(root: string): Promise<void> {
+        const module = this.#knownModules.find((m) => m.root === root);
+        if (!module) return;
+        await this.stop(root);
+        await this.ensureStarted(module);
+    }
+
     async stopAll(): Promise<void> {
         this.#disposed = true;
         await Promise.all([...this.#entries.keys()].map((root) => this.stop(root)));

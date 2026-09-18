@@ -8,6 +8,7 @@ import { ServerManager } from './serverManager';
 import { pyStatusLabel } from './statusLabel';
 import { langserverScript } from './serverMeta';
 import { sweepOrphans } from './orphanSweep';
+import { changedRoots, filterRootDirs } from './rootSnapshot';
 import {
     DEBUG_COMMAND,
     DEBUG_TEST_COMMAND,
@@ -19,6 +20,7 @@ import {
 } from './runner';
 
 const MANIFEST_NAME = 'pyright-modules.json';
+const RESTART_COMMAND = 'pyrightMulti.restartServer';
 
 let manager: ServerManager | null = null;
 let runner: Runner | null = null;
@@ -27,6 +29,8 @@ let output: vscode.OutputChannel | null = null;
 /** last-good manifest store per workspace folder uri */
 const stores = new Map<string, ManifestStore>();
 let watchers: vscode.FileSystemWatcher[] = [];
+/** top-level package dirs per module root, as of the last check */
+let rootDirs = new Map<string, string[]>();
 
 function log(message: string): void {
     output?.appendLine(`[pyright-multi] ${message}`);
@@ -66,6 +70,74 @@ async function applyCurrentModules(): Promise<void> {
     runner?.setKnownModules(modules);
     if (diff.added.length > 0) log(`modules added: ${diff.added.map((m) => m.root).join(', ')} (servers start lazily)`);
     updateStatus();
+}
+
+async function readRootDirs(root: string): Promise<string[]> {
+    let entries;
+    try {
+        entries = await fs.readdir(root, { withFileTypes: true });
+    } catch {
+        return [];
+    }
+    // a symlinked package is a symlink, not a directory — resolving it is the whole
+    // point: that is the shape vscode's own file watcher never descends into
+    const resolved = await Promise.all(entries.map(async (e) => ({
+        name: e.name,
+        isDir: e.isDirectory()
+            || (e.isSymbolicLink() && await fs.stat(path.join(root, e.name)).then((s) => s.isDirectory(), () => false)),
+    })));
+    return filterRootDirs(resolved);
+}
+
+async function snapshotRoots(roots: string[]): Promise<Map<string, string[]>> {
+    const pairs = await Promise.all(roots.map(async (root) => [root, await readRootDirs(root)] as const));
+    return new Map(pairs);
+}
+
+/** restart the servers whose module root gained or lost a top-level package since the last check */
+async function restartStaleServers(): Promise<void> {
+    const srv = manager;
+    if (!srv) return;
+    const current = await snapshotRoots(srv.knownModules().map((m) => m.root));
+    const active = new Set(srv.activeRoots());
+    const stale = changedRoots(rootDirs, current).filter((root) => active.has(root));
+    rootDirs = current;
+    for (const root of stale) {
+        log(`top-level packages changed in ${root} — restarting its language server`);
+        await srv.restart(root);
+    }
+}
+
+/** palette command: restart this module's server, or every running one */
+async function promptRestart(): Promise<void> {
+    const srv = manager;
+    if (!srv) return;
+    const activePath = vscode.window.activeTextEditor?.document.uri.fsPath ?? null;
+    const root = activePath === null ? null : findModule(srv.knownModules(), activePath);
+    const items: Array<vscode.QuickPickItem & { run: () => Promise<void> }> = [];
+    if (root !== null) {
+        items.push({
+            label: `$(refresh) Restart ${path.basename(root)}`,
+            detail: root,
+            run: async () => {
+                log(`manual restart: ${root}`);
+                await srv.restart(root);
+            },
+        });
+    }
+    items.push({
+        label: '$(refresh) Restart all running servers',
+        detail: srv.activeRoots().map((r) => path.basename(r)).join(', ') || 'none running',
+        run: async () => {
+            for (const active of srv.activeRoots()) {
+                log(`manual restart: ${active}`);
+                await srv.restart(active);
+            }
+        },
+    });
+    items.push({ label: '$(output) Show log', run: async () => output?.show() });
+    const picked = await vscode.window.showQuickPick(items, { placeHolder: 'pyright-multi' });
+    await picked?.run();
 }
 
 function updateStatus(): void {
@@ -115,6 +187,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
     await applyCurrentModules();
     setupWatchers();
+    rootDirs = await snapshotRoots(manager.knownModules().map((m) => m.root));
 
     context.subscriptions.push(
         output,
@@ -168,9 +241,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         vscode.workspace.onDidSaveTextDocument((doc) => {
             if (doc.uri.path.endsWith(MANIFEST_NAME)) void applyCurrentModules();
         }),
+        // coming back from the terminal is exactly when a new top-level package
+        // (a fresh dir, or a symlink to one) has just appeared
         vscode.window.onDidChangeWindowState((state) => {
-            if (state.focused) void applyCurrentModules();
+            if (!state.focused) return;
+            void applyCurrentModules().then(() => restartStaleServers());
         }),
+        vscode.commands.registerCommand(RESTART_COMMAND, () => void promptRestart()),
         vscode.commands.registerCommand('pyrightMulti.showStatus', () => {
             output?.show();
         }),

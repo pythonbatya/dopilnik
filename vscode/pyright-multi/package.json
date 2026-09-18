@@ -1,51 +1,95 @@
 {
-  "name": "pyright-multi",
-  "displayName": "pyright-multi",
-  "description": "One pyright language server per module, each with its own venv",
-  "version": "0.4.1",
-  "publisher": "lvinogradov",
-  "engines": { "vscode": "^1.93.0" },
-  "categories": ["Programming Languages"],
-  "activationEvents": ["onWorkspaceContains:pyright-modules.json", "onLanguage:python"],
-  "main": "./dist/extension.js",
-  "contributes": {
-    "commands": [
-      { "command": "pyrightMulti.showStatus", "title": "pyright-multi: Show status" },
-      { "command": "pyrightMulti.runFile", "title": "pyright-multi: Run python file", "icon": "$(play-circle)" },
-      { "command": "pyrightMulti.debugFile", "title": "pyright-multi: Debug python file", "icon": "$(bug)" },
-      { "command": "pyrightMulti.runTest", "title": "pyright-multi: Run pytest target (CodeLens)" },
-      { "command": "pyrightMulti.debugTest", "title": "pyright-multi: Debug pytest target (CodeLens)" }
+    "name": "pyright-multi",
+    "displayName": "pyright-multi",
+    "description": "One pyright language server per module, each with its own venv",
+    "version": "0.5.1",
+    "publisher": "lvinogradov",
+    "engines": {
+        "vscode": "^1.93.0"
+    },
+    "categories": [
+        "Programming Languages"
     ],
-    "menus": {
-      "editor/title": [
-        { "command": "pyrightMulti.runFile", "when": "resourceLangId == python", "group": "navigation@1" },
-        { "command": "pyrightMulti.debugFile", "when": "resourceLangId == python", "group": "navigation@2" }
-      ],
-      "editor/context": [
-        { "command": "pyrightMulti.runFile", "when": "resourceLangId == python", "group": "navigation@1" },
-        { "command": "pyrightMulti.debugFile", "when": "resourceLangId == python", "group": "navigation@2" }
-      ]
+    "activationEvents": [
+        "onWorkspaceContains:pyright-modules.json",
+        "onLanguage:python"
+    ],
+    "main": "./dist/extension.js",
+    "contributes": {
+        "commands": [
+            {
+                "command": "pyrightMulti.showStatus",
+                "title": "pyright-multi: Show status"
+            },
+            {
+                "command": "pyrightMulti.restartServer",
+                "title": "pyright-multi: Restart language server"
+            },
+            {
+                "command": "pyrightMulti.runFile",
+                "title": "pyright-multi: Run python file",
+                "icon": "$(play-circle)"
+            },
+            {
+                "command": "pyrightMulti.debugFile",
+                "title": "pyright-multi: Debug python file",
+                "icon": "$(bug)"
+            },
+            {
+                "command": "pyrightMulti.runTest",
+                "title": "pyright-multi: Run pytest target (CodeLens)"
+            },
+            {
+                "command": "pyrightMulti.debugTest",
+                "title": "pyright-multi: Debug pytest target (CodeLens)"
+            }
+        ],
+        "menus": {
+            "editor/title": [
+                {
+                    "command": "pyrightMulti.runFile",
+                    "when": "resourceLangId == python",
+                    "group": "navigation@1"
+                },
+                {
+                    "command": "pyrightMulti.debugFile",
+                    "when": "resourceLangId == python",
+                    "group": "navigation@2"
+                }
+            ],
+            "editor/context": [
+                {
+                    "command": "pyrightMulti.runFile",
+                    "when": "resourceLangId == python",
+                    "group": "navigation@1"
+                },
+                {
+                    "command": "pyrightMulti.debugFile",
+                    "when": "resourceLangId == python",
+                    "group": "navigation@2"
+                }
+            ]
+        }
+    },
+    "scripts": {
+        "vscode:prepublish": "node esbuild.js --production",
+        "compile": "node esbuild.js",
+        "watch": "node esbuild.js --watch",
+        "typecheck": "tsc --noEmit",
+        "test": "tsx --test src/manifest.test.ts src/rootSnapshot.test.ts src/router.test.ts src/manifestDiff.test.ts src/orphanSweep.test.ts src/serverManager.test.ts src/runMeta.test.ts src/testMeta.test.ts src/statusLabel.test.ts",
+        "package": "vsce package"
+    },
+    "dependencies": {
+        "jsonc-parser": "^3.3.1",
+        "pyright": "1.1.413",
+        "vscode-languageclient": "^9.0.1"
+    },
+    "devDependencies": {
+        "@types/node": "^22.10.0",
+        "@types/vscode": "^1.93.0",
+        "@vscode/vsce": "^3.2.0",
+        "esbuild": "^0.24.0",
+        "tsx": "^4.19.0",
+        "typescript": "^5.7.0"
     }
-  },
-  "scripts": {
-    "vscode:prepublish": "node esbuild.js --production",
-    "compile": "node esbuild.js",
-    "watch": "node esbuild.js --watch",
-    "typecheck": "tsc --noEmit",
-    "test": "tsx --test src/manifest.test.ts src/router.test.ts src/manifestDiff.test.ts src/orphanSweep.test.ts src/serverManager.test.ts src/runMeta.test.ts src/testMeta.test.ts src/statusLabel.test.ts",
-    "package": "vsce package"
-  },
-  "dependencies": {
-    "jsonc-parser": "^3.3.1",
-    "pyright": "1.1.413",
-    "vscode-languageclient": "^9.0.1"
-  },
-  "devDependencies": {
-    "@types/node": "^22.10.0",
-    "@types/vscode": "^1.93.0",
-    "@vscode/vsce": "^3.2.0",
-    "esbuild": "^0.24.0",
-    "tsx": "^4.19.0",
-    "typescript": "^5.7.0"
-  }
 }
