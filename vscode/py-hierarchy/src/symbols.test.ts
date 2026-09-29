@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { classForBaseAt, classForLine, defForLine, defOfNameInClass, defForNameAt, findClasses, findDefs } from './symbols';
+import { classForBaseAt, classForLine, defForLine, defOfNameInClass, defForNameAt, findClasses, findDefs, hierarchyAnchorLine } from './symbols';
 
 test('class without bases', () => {
     const text = ['class Foo:', '    pass'].join('\n');
@@ -166,4 +166,73 @@ test('defOfNameInClass finds the def with the given name owned by the given clas
     assert.equal(inChild?.line, 5);
     assert.equal(defOfNameInClass(defs, 'Other', 'init'), null);
     assert.equal(defOfNameInClass(defs, 'Nope', 'init'), null);
+});
+
+const HIERARCHY_SAMPLE = [
+    'import os',                       // 0
+    '',                                // 1
+    'class Base:',                     // 2
+    '    """doc"""',                   // 3
+    '    def run(self):',              // 4
+    '        x = 1',                   // 5
+    '',                                // 6
+    '        def inner():',            // 7
+    '            return x',            // 8
+    '        return inner',            // 9
+    '',                                // 10
+    '    limit = 5',                   // 11
+    '',                                // 12
+    'def helper():',                   // 13
+    '    return 2',                    // 14
+].join('\n');
+
+function anchorAt(line: number): number | null {
+    return hierarchyAnchorLine(HIERARCHY_SAMPLE, findClasses(HIERARCHY_SAMPLE), findDefs(HIERARCHY_SAMPLE), line);
+}
+
+test('hierarchyAnchorLine: on a class header -> that class', () => {
+    assert.equal(anchorAt(2), 2);
+});
+
+test('hierarchyAnchorLine: on a method header -> that method', () => {
+    assert.equal(anchorAt(4), 4);
+});
+
+test('hierarchyAnchorLine: inside a method body -> the method', () => {
+    assert.equal(anchorAt(5), 4);
+});
+
+test('hierarchyAnchorLine: blank line inside a method -> the method', () => {
+    assert.equal(anchorAt(6), 4);
+});
+
+test('hierarchyAnchorLine: inside a nested function -> the enclosing method', () => {
+    assert.equal(anchorAt(8), 4);
+});
+
+test('hierarchyAnchorLine: class body after a method ended -> the class', () => {
+    assert.equal(anchorAt(11), 2);
+});
+
+test('hierarchyAnchorLine: class docstring -> the class', () => {
+    assert.equal(anchorAt(3), 2);
+});
+
+test('hierarchyAnchorLine: module-level function has no hierarchy', () => {
+    assert.equal(anchorAt(14), null);
+});
+
+test('hierarchyAnchorLine: module level code has no hierarchy', () => {
+    assert.equal(anchorAt(0), null);
+});
+
+test('hierarchyAnchorLine: black-style multi-line signature keeps the body inside the method', () => {
+    const text = [
+        'class A:',                  // 0
+        '    def run(',              // 1
+        '        self,',             // 2
+        '    ) -> None:',            // 3
+        '        pass',              // 4
+    ].join('\n');
+    assert.equal(hierarchyAnchorLine(text, findClasses(text), findDefs(text), 4), 1);
 });

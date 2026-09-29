@@ -135,3 +135,37 @@ export function defForLine(defs: ReadonlyArray<DefInfo>, line: number): DefInfo 
 export function defOfNameInClass(defs: ReadonlyArray<DefInfo>, className: string, methodName: string): DefInfo | null {
     return defs.find((d) => d.ownerClass === className && d.name === methodName) ?? null;
 }
+
+function blockEncloses(lines: string[], header: number, line: number): boolean {
+    const indentOf = (s: string): number => s.length - s.trimStart().length;
+    const headerIndent = indentOf(lines[header]);
+    return lines.slice(header + 1, line + 1).every((l) => {
+        const trimmed = l.trim();
+        // blank lines and the closing bracket of a multi-line signature
+        // (black puts `) -> None:` at the def's own indent) stay inside
+        return trimmed === '' || /^[)\]}]/.test(trimmed) || indentOf(l) > headerIndent;
+    });
+}
+
+/**
+ * The header line of the class or method whose hierarchy the cursor line
+ * belongs to. findDefs tags a function nested inside a method with the class
+ * as its owner, so walk outward until a class or a class's direct method.
+ */
+export function hierarchyAnchorLine(
+    text: string, classes: ReadonlyArray<ClassInfo>, defs: ReadonlyArray<DefInfo>, line: number,
+): number | null {
+    const lines = text.split('\n');
+    const classLines = new Set(classes.map((c) => c.line));
+    const headers = [...classLines, ...defs.map((d) => d.line)].sort((a, b) => b - a);
+    const innermost = (l: number, strictlyAbove: boolean): number | null =>
+        headers.find((h) => (strictlyAbove ? h < l : h <= l) && (h === l || blockEncloses(lines, h, l))) ?? null;
+    let header = innermost(line, false);
+    while (header !== null) {
+        if (classLines.has(header)) return header;
+        const parent = innermost(header, true);
+        if (parent !== null && classLines.has(parent)) return header;
+        header = parent;
+    }
+    return null;
+}

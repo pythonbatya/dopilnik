@@ -1,17 +1,7 @@
 import * as path from 'node:path';
 import * as vscode from 'vscode';
 import { bothTitle, childrenTitle, NAV_COMMAND, parentTitle, parseNavArgs, type NavArgs } from './hoverLinks';
-import {
-    classForBaseAt,
-    classForLine,
-    defForLine,
-    defOfNameInClass,
-    defForNameAt,
-    findClasses,
-    findDefs,
-    type ClassInfo,
-    type DefInfo,
-} from './symbols';
+import { classForBaseAt, classForLine, defForLine, defOfNameInClass, defForNameAt, findClasses, findDefs, type ClassInfo, type DefInfo, hierarchyAnchorLine } from './symbols';
 import { collectBoth, collectTree, splitByDirection, type WalkBranch, type WalkQueries } from './walker';
 import { openResultEditor, registerResultDoc, type ResultDocOptions } from '../../shared-result/src/resultDoc';
 
@@ -394,6 +384,20 @@ async function peekTargets(uri: vscode.Uri, position: vscode.Position, nodes: Na
  * navigation, never an editor: a single direct parent/child jumps straight
  * there, several open the native peek to pick the target from
  */
+/** palette/keybinding: the ⇅ view for the class or method the cursor is in */
+async function showAtCursor(): Promise<void> {
+    const editor = vscode.window.activeTextEditor;
+    if (editor === undefined || editor.document.languageId !== 'python') return;
+    const parsed = await parsedFor(editor.document.uri);
+    const line = hierarchyAnchorLine(editor.document.getText(), parsed.classes, parsed.defs, editor.selection.active.line);
+    if (line === null) {
+        void vscode.window.showInformationMessage('py-hierarchy: the cursor is not inside a class or method');
+        return;
+    }
+    const nameCol = (parsed.classes.find((c) => c.line === line) ?? parsed.defs.find((d) => d.line === line))?.nameCol ?? 0;
+    await runNav({ kind: 'both', uri: editor.document.uri.toString(), line, col: nameCol });
+}
+
 async function runNav(raw: unknown): Promise<void> {
     const args = parseNavArgs(raw);
     if (args === null) {
@@ -655,6 +659,7 @@ export function activate(context: vscode.ExtensionContext): void {
         gutterDown,
         gutterBoth,
         vscode.commands.registerCommand(NAV_COMMAND, (raw: unknown) => void runNav(raw)),
+        vscode.commands.registerCommand('pyHierarchy.showAtCursor', () => void showAtCursor()),
         vscode.languages.registerCodeLensProvider(
             { language: 'python', scheme: 'file' },
             new OverrideCodeLensProvider(),
